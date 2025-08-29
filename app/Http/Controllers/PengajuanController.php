@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pegawai;
 use App\Models\Cuti;
+use App\Models\Jeniscuti;
 use App\Models\Pyb;
 use App\Models\Jabatan;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class PengajuanController extends Controller
     public function index()
     {
         $pegawai = Pegawai::join('opds', 'pegawais.kode_pd', '=', 'opds.kode_pd')->where('pegawais.id', session('id_pegawai'))->first();
+        $jeniscuti = Jeniscuti::get();
         // return $pegawai;
         $client = new Client();
         $uker = Session::get('kode_pd');
@@ -45,6 +47,7 @@ class PengajuanController extends Controller
         $tahun_s = Carbon::now()->year;
         $tahun_c = Cuti::where([
             'nip' => $nip,
+            'jeniscuti' => 1,
             'status' => 'disetujui'
         ])->get(['tglmulai', 'jmlhari']);        
         $jml_hari = 0;
@@ -71,6 +74,7 @@ class PengajuanController extends Controller
         $draft = Cuti::where('nip', session('nip'))->where('status', 'draft')->first();
         $pyb = Pyb::all();
         $jabatan = Jabatan::all();
+        $atasannip = Cuti::where('nip', session('nip'))->where(['status' => 'draft', 'atasannip' => '1'])->pluck('atasannip')->first();
         // return $sisa_cuti;
         if($draft){
             $tgl_mulai = Carbon::createFromFormat('d/m/Y', $draft->tglmulai)->format('Y-m-d');
@@ -85,6 +89,7 @@ class PengajuanController extends Controller
             return view('pegawai.pengajuancuti.index', [
                 'title' => 'Pengajuan Cuti',
                 'pegawai' => $pegawai,
+                'jeniscuti' => $jeniscuti,
                 'data_uker' => $ukers,
                 'libur' => $libur,                
                 'sisa_cuti' => $sisa_cuti,                
@@ -95,6 +100,7 @@ class PengajuanController extends Controller
             return view('pegawai.pengajuancuti.edit', [
                 'title' => 'Pengajuan Cuti',
                 'pegawai' => $pegawai,
+                'jeniscuti' => $jeniscuti,
                 'data_uker' => $ukers,
                 'libur' => $libur,
                 'draft' => $draft,
@@ -102,6 +108,7 @@ class PengajuanController extends Controller
                 'sisa_cuti' => $sisa_cuti,    
                 'pyb' => $pyb, 
                 'jabatan' => $jabatan,                
+                'atasannip' => $atasannip,                
             ]);
         }
         
@@ -157,23 +164,33 @@ class PengajuanController extends Controller
 
     function insertcuti(Request $request)
     {
+        // return $request;
         $client = new Client();
         $get_nama = "http://10.90.150.3:5001/api/pegawai/".$request->atasan;
         $res_nama = $client->request('GET', $get_nama, [
             'verify' => false,
         ]);
         $namaatasan = json_decode($res_nama->getBody());
+
+        if ($request->jabatan == 1){
+            $kepalapd = NULL;
+        }else {
+            $get_kepala = "http://10.90.150.3:5001/api/pegawai/".$request->kepalaopd;
+            $res_kepala = $client->request('GET', $get_kepala, [
+                'verify' => false,
+            ]);
+            $namakepala = json_decode($res_kepala->getBody());
+            $kepalapd = $namakepala[0]->nama;
+        }
+        
+
         if($request->submit == 'draft'){
             
-            if($request->dokumen){
-                $tahun = Carbon::now()->format('Y');
-                $dokumen = Str::random(30).'.'.$request->dokumen->extension();         
-                $request->dokumen->move(public_path('dokumenpengajuan/'. $tahun), $dokumen);
-                               
-                $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;
-            
+            if(empty($request->dokumen && $request->dokumenpendukung)){
+                
                 $data = [
                     'nip'        => session('nip'),
+                    'nama'        => $request->nama,
                     'tanggal'    => date('Y-m-d'),
                     'tahun'  => Carbon::parse($request->mulai)->year,
                     'jeniscuti'  => $request->jeniscuti,
@@ -184,22 +201,68 @@ class PengajuanController extends Controller
                     'alamatcuti' => $request->alamat,
                     'jabatan' => $request->jabatan,
                     'telepon'    => $request->hp,
-                    'masa_kerja'  => $request->masa_kerja,
+                    'masa_kerja'  => $request->mk_tahun . " " . $request->mk_bulan,
                     'namaatasan'  => $namaatasan[0]->nama,
                     'kd_jab'  => $request->kd_jab,
                     'atasannip'  => $request->atasan,
                     'pejabatnip' => $request->pejabat,
-                    'dokumen'    => $filePengajuan,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
+                    'status'     => 'draft'
+                ];
+
+                Cuti::create($data);
+                return redirect('/cetak')->with('success','Status Proses Permohonan Berhasil Dikirim');
+               
+            }elseif(empty($request->dokumenpendukung)){
+                $tahun = Carbon::now()->format('Y');
+                $dokumen = Str::random(30).'.'.$request->dokumen->extension();         
+                $request->dokumen->move(public_path('dokumenpengajuan/'. $tahun), $dokumen);
+                               
+                $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;                
+            
+                $data = [
+                    'nip'        => session('nip'),
+                    'nama'        => $request->nama,
+                    'tanggal'    => date('Y-m-d'),
+                    'tahun'  => Carbon::parse($request->mulai)->year,
+                    'jeniscuti'  => $request->jeniscuti,
+                    'jmlhari'    => $request->jmlhari,
+                    'tglmulai'   => Carbon::parse($request->mulai)->format('d/m/Y'),
+                    'tglselesai' => $request->selesai,
+                    'alasancuti' => $request->alasan,
+                    'alamatcuti' => $request->alamat,
+                    'jabatan' => $request->jabatan,
+                    'telepon'    => $request->hp,
+                    'masa_kerja'  => $request->mk_tahun . " " . $request->mk_bulan,
+                    'namaatasan'  => $namaatasan[0]->nama,
+                    'kd_jab'  => $request->kd_jab,
+                    'atasannip'  => $request->atasan,
+                    'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
+                    'dokumen'    => $filePengajuan,                    
                     'status'     => 'draft'
                 ];
 
                 Cuti::create($data);                
                 return redirect('/cetak')->with('success','Status Proses Permohonan Berhasil Dikirim');
                
+            }else if($request->dokumen && $request->dokumenpendukung){
+                $tahun = Carbon::now()->format('Y');
+                $dokumen = Str::random(30).'.'.$request->dokumen->extension();         
+                $request->dokumen->move(public_path('dokumenpengajuan/'. $tahun), $dokumen);
+                               
+                $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;
 
-            }else{
+                $dokumenpendukung = Str::random(30).'.'.$request->dokumenpendukung->extension();         
+                $request->dokumenpendukung->move(public_path('dokumenpengajuan/'. $tahun), $dokumenpendukung);
+                               
+                $filePendukung = 'dokumenpengajuan/' . $tahun . '/' . $dokumenpendukung;
+            
                 $data = [
                     'nip'        => session('nip'),
+                    'nama'        => $request->nama,
                     'tanggal'    => date('Y-m-d'),
                     'tahun'  => Carbon::parse($request->mulai)->year,
                     'jeniscuti'  => $request->jeniscuti,
@@ -210,21 +273,25 @@ class PengajuanController extends Controller
                     'alamatcuti' => $request->alamat,
                     'jabatan' => $request->jabatan,
                     'telepon'    => $request->hp,
-                    'masa_kerja'  => $request->masa_kerja,
+                    'masa_kerja'  => $request->mk_tahun . " " . $request->mk_bulan,
                     'namaatasan'  => $namaatasan[0]->nama,
                     'kd_jab'  => $request->kd_jab,
                     'atasannip'  => $request->atasan,
-                    'pejabatnip' => $request->pejabat,                
+                    'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
+                    'dokumen'    => $filePengajuan,
+                    'dokumenpendukung'    => $filePendukung,
                     'status'     => 'draft'
                 ];
 
-                Cuti::create($data);
+                Cuti::create($data);                
                 return redirect('/cetak')->with('success','Status Proses Permohonan Berhasil Dikirim');
-           
+               
             }
         }elseif($request->submit == 'kirim'){
 
-            if($request->dokumen){
+            if(empty($request->dokumenpendukung)){
 
                 $tahun = Carbon::now()->format('Y');
                 $dokumen = Str::random(30).'.'.$request->dokumen->extension();         
@@ -233,7 +300,8 @@ class PengajuanController extends Controller
                 $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;        
             
                 $data = [
-                    'nip'        => session('nip'),        
+                    'nip'        => session('nip'),  
+                    'nama'        => $request->nama,      
                     'tanggal'    => date('Y-m-d'),
                     'tahun'  => Carbon::parse($request->mulai)->year,            
                     'jeniscuti'  => $request->jeniscuti,
@@ -241,13 +309,16 @@ class PengajuanController extends Controller
                     'tglmulai'   => Carbon::parse($request->mulai)->format('d/m/Y'),
                     'tglselesai' => $request->selesai,
                     'alasancuti' => $request->alasan,
+                    'jabatan' => $request->jabatan,
                     'alamatcuti' => $request->alamat,
                     'telepon'    => $request->hp,
-                    'masa_kerja'  => $request->masa_kerja,
+                    'masa_kerja'  => $request->mk_tahun . " " . $request->mk_bulan,
                     'namaatasan'  => $namaatasan[0]->nama,
                     'kd_jab'  => $request->kd_jab,
                     'atasannip'  => $request->atasan,
                     'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
                     'dokumen'    => $filePengajuan,
                     'status'     => 'pengajuan'
                 ];
@@ -256,6 +327,46 @@ class PengajuanController extends Controller
                 return redirect('/user')->with('success','Status Proses Permohonan Berhasil Dikirim');
             
                 
+            }else if($request->dokumen && $request->dokumenpendukung){
+                $tahun = Carbon::now()->format('Y');
+                $dokumen = Str::random(30).'.'.$request->dokumen->extension();         
+                $request->dokumen->move(public_path('dokumenpengajuan/'. $tahun), $dokumen);
+                               
+                $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;
+
+                $dokumenpendukung = Str::random(30).'.'.$request->dokumenpendukung->extension();         
+                $request->dokumenpendukung->move(public_path('dokumenpengajuan/'. $tahun), $dokumenpendukung);
+                               
+                $filePendukung = 'dokumenpengajuan/' . $tahun . '/' . $dokumenpendukung;                        
+
+                $data = [
+                    'nip'        => session('nip'), 
+                    'nama'        => $request->nama,       
+                    'tanggal'    => date('Y-m-d'),
+                    'tahun'  => Carbon::parse($request->mulai)->year,            
+                    'jeniscuti'  => $request->jeniscuti,
+                    'jmlhari'    => $request->jmlhari,
+                    'tglmulai'   => Carbon::parse($request->mulai)->format('d/m/Y'),
+                    'tglselesai' => $request->selesai,
+                    'alasancuti' => $request->alasan,
+                    'jabatan' => $request->jabatan,
+                    'alamatcuti' => $request->alamat,
+                    'telepon'    => $request->hp,
+                    'masa_kerja'  => $request->mk_tahun . " " . $request->mk_bulan,
+                    'namaatasan'  => $namaatasan[0]->nama,
+                    'kd_jab'  => $request->kd_jab,
+                    'atasannip'  => $request->atasan,
+                    'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
+                    'dokumen'    => $filePengajuan,
+                    'dokumenpendukung'    => $filePendukung,
+                    'status'     => 'pengajuan'
+                ];
+                
+                Cuti::create($data);
+                return redirect('/user')->with('success','Status Proses Permohonan Berhasil Dikirim');
+
             }else{
                 return redirect('/pengajuan')->with('error','Mohon Lengkapi Persyaratan Pengajuan Cuti');
             }
@@ -271,6 +382,18 @@ class PengajuanController extends Controller
             'verify' => false,
         ]);
         $namaatasan = json_decode($res_nama->getBody());
+
+        if ($request->jabatan == 1){
+            $kepalapd = NULL;
+        }else {
+            $get_kepala = "http://10.90.150.3:5001/api/pegawai/".$request->kepalaopd;
+            $res_kepala = $client->request('GET', $get_kepala, [
+                'verify' => false,
+            ]);
+            $namakepala = json_decode($res_kepala->getBody());
+            $kepalapd = $namakepala[0]->nama;
+        }
+
         if($request->submit == 'draft'){
             if($request->dokumen){
 
@@ -281,7 +404,8 @@ class PengajuanController extends Controller
                 $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;
 
                 $data = [
-                    'nip'        => session('nip'),     
+                    'nip'        => session('nip'),
+                    'nama'        => $request->nama,     
                     'tanggal'    => date('Y-m-d'),
                     'tahun'  => Carbon::parse($request->mulai)->year,               
                     'jeniscuti'  => $request->jeniscuti,
@@ -297,6 +421,8 @@ class PengajuanController extends Controller
                     'kd_jab'  => $request->kd_jab,
                     'atasannip'  => $request->atasan,
                     'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
                     'dokumen'    => $filePengajuan,
                     'status'    => 'draft'
                 ];
@@ -306,7 +432,8 @@ class PengajuanController extends Controller
           
             }else{
                 $data = [
-                    'nip'        => session('nip'),              
+                    'nip'        => session('nip'),
+                    'nama'        => $request->nama,              
                     'tanggal'    => date('Y-m-d'),
                     'tahun'  => Carbon::parse($request->mulai)->year,      
                     'jeniscuti'  => $request->jeniscuti,
@@ -320,7 +447,9 @@ class PengajuanController extends Controller
                     'masa_kerja'  => $request->masa_kerja,
                     'namaatasan'  => $namaatasan[0]->nama,
                     'atasannip'  => $request->atasan,
-                    'pejabatnip' => $request->pejabat,                
+                    'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
                     'status'     => 'draft'
                 ];
 
@@ -339,7 +468,8 @@ class PengajuanController extends Controller
                 $filePengajuan = 'dokumenpengajuan/' . $tahun . '/' . $dokumen;
             
                 $data = [
-                    'nip'        => session('nip'),            
+                    'nip'        => session('nip'),
+                    'nama'        => $request->nama,            
                     'tanggal'    => date('Y-m-d'),
                     'tahun'  => Carbon::parse($request->mulai)->year,        
                     'jeniscuti'  => $request->jeniscuti,
@@ -353,6 +483,8 @@ class PengajuanController extends Controller
                     'masa_kerja'  => $request->masa_kerja,
                     'atasannip'  => $request->atasan,
                     'pejabatnip' => $request->pejabat,
+                    'nipkepala' => $request->kepalaopd,
+                    'namakepala' => $kepalapd,
                     'dokumen'    => $filePengajuan,
                     'status'     => 'pengajuan'
                 ];

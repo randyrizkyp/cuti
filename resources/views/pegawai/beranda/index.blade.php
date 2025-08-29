@@ -60,7 +60,7 @@ Carbon::setLocale('id');
                                                 <div class="d-flex">
                                                     <div class="mt-2">
                                                         <h6 class="">Cuti Ditolak</h6>
-                                                        <h2 class="mb-0 number-font">{{$t_ditolak}} Hari</h2>
+                                                        <h2 class="mb-0 number-font">{{$t_ditolak}} Berkas</h2>
                                                     </div>
                                                     <div class="ms-auto">
                                                         <div class="chart-wrapper mt-1">
@@ -102,7 +102,7 @@ Carbon::setLocale('id');
                                                     <th style="width: 15%">Tanggal Pengajuan</th>
                                                     <th style="width: 15%">Jenis Cuti</th>                                                    
                                                     <th style="width: 15%">Tanggal Cuti</th>
-                                                    <th style="width: 25%">Catatan</th>
+                                                    <th style="width: 25%">Keterangan</th>
                                                     <th style="width: 15%">Status</th>
                                                 </tr>
                                             </thead>
@@ -110,7 +110,7 @@ Carbon::setLocale('id');
                                                 @foreach($cuti as $ct)
                                                 <tr>
                                                     <td class="sorting_1">{{$loop->iteration}}</td>
-                                                    <td class="text-center">{{($ct->created_at)->format('d/m/Y')}}</td>
+                                                    <td class="text-center">{{Carbon::parse($ct->tanggal)->format('d/m/Y')}}</td>
                                                     <td>
                                                         @if($ct->jeniscuti == 1)
                                                             Cuti Tahunan <span class="badge bg-info">{{$ct->jmlhari}} Hari</span>
@@ -127,12 +127,18 @@ Carbon::setLocale('id');
                                                         @endif
                                                     </td>                                                    
                                                     <td class="text-center"> {{$ct->tglmulai}} </td>
-                                                    <td class="text-center"> {{$ct->catatan}} </td>
+                                                    <td class="text-center"> @if ($ct->status == 'draft') {{ 'Draft' }} @elseif ($ct->status == 'pengajuan' || $ct->status == 'penandatanganan') {{ 'Pengajuan' }} @elseif ($ct->status == 'ditolak' || $ct->status == 'tms') {{ $ct->catatan }} @elseif ($ct->status == 'disetujui') {{ 'Disetujui' }} @endif</td>
                                                     <td class="text-center">
                                                         @if($ct->status == 'draft')
                                                             <button type="button" class="btn btn-warning"  data-bs-toggle="modal" data-bs-target="#detail{{$ct->id_cuti}}"><i class="fa-solid fa-circle-info"></i> Draft</button>
                                                         @elseif($ct->status == 'pengajuan' || $ct->status == 'penandatanganan')
                                                             <button type="button" class="btn btn-info"  data-bs-toggle="modal" data-bs-target="#detail{{$ct->id_cuti}}"><i class="fa-solid fa-circle-info"></i> Pengajuan</button>
+                                                        @elseif($ct->status == 'ditolak')
+                                                            <button type="button" class="btn btn-danger"  data-bs-toggle="modal" data-bs-target="#detail{{$ct->id_cuti}}"><i class="fa-solid fa-circle-info"></i> Ditolak</button>
+                                                        @elseif($ct->status == 'disetujui')
+                                                            <button type="button" class="btn btn-success"  data-bs-toggle="modal" data-bs-target="#detail{{$ct->id_cuti}}"><i class="fa-solid fa-circle-info"></i> Disetujui</button>
+                                                        @elseif($ct->status == 'tms')
+                                                            <button type="button" class="btn btn-danger"  data-bs-toggle="modal" data-bs-target="#detail{{$ct->id_cuti}}"><i class="fa-solid fa-circle-info"></i> Ditolak</button>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -162,7 +168,7 @@ Carbon::setLocale('id');
                     <tr>
                         <td class="text-start" style="width: 30%"><strong>Nama</strong></td>
                         <td style="width: 10%">:</td>
-                        <td class="text-start" style="width: 60%">{{session('nama')}}</td>
+                        <td class="text-start" style="width: 60%">{{strtoupper(session('nama'))}}</td>
                     </tr>
                     <tr>
                         <td class="text-start"><strong>NIP</strong></td>
@@ -219,25 +225,40 @@ Carbon::setLocale('id');
                         <td class="text-start">
                             @foreach ($data_uker as $uk)
                                 @if ($uk->nip == $ct->atasannip)
-                                {{$uk->nama}} / {{$ct->atasannip}}
+                                {{strtoupper($uk->nama)}} / {{$ct->atasannip}}
                                 @endif
                             @endforeach
                         </td>
+                    </tr>
+                    <tr>
+                        <td class="text-start"><strong>Kepala Perangkat Daerah</strong></td>
+                        <td>:</td>
+                        <td class="text-start"> {{strtoupper($ct->namakepala)}} / {{$ct->nipkepala}}</td>
                     </tr>
                     <tr>
                         <td class="text-start"><strong>PyB Memberikan Cuti</strong></td>
                         <td>:</td>
                         <td class="text-start">
                             @if($ct->pejabatnip == '3')
-                                {{$pyb[2]->namapyb}}
+                                {{strtoupper($pyb[2]->namapyb)}}
                             @else
                                 @foreach ($pyb as $pb)
                                     @if($ct->pejabatnip == $pb->kd)
-                                        {{$pb->namapyb}} / {{$pb->nip}}
+                                        {{strtoupper($pb->namapyb)}} / {{$pb->pyb_nip}}
                                     @endif
                                 @endforeach
                             @endif
                         </td>
+                    </tr>
+                    <tr>
+                        <td class="text-start"><strong>Persetujuan Atasan Langsung </strong></td>
+                        <td>:</td>
+                        <td class="text-start">@if($ct->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $ct->dokumen }}"><i class="fa fa-file"></i> Lihat Dokumen</a>@endif</td>
+                    </tr>
+                    <tr>
+                        <td class="text-start"><strong>File Pendukung Cuti </strong></td>
+                        <td>:</td>
+                        <td class="text-start">@if($ct->dokumenpendukung)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $ct->dokumenpendukung }}"><i class="fa fa-file"></i> Lihat Dokumen</a>@endif</td>
                     </tr>
                     <tr>
                         <td class="text-start"><strong>Status Cuti</strong></td>
@@ -248,6 +269,11 @@ Carbon::setLocale('id');
                         <td class="text-start"><strong>Nomor Surat </strong></td>
                         <td>:</td>
                         <td class="text-start">{{$ct->no_surat}}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-start"><strong>File Cuti </strong></td>
+                        <td>:</td>
+                        <td class="text-start">@if($ct->dokumencuti)<a class="btn btn-success btn-sm" title="Lihat File" target="_blank" href="/{{ $ct->dokumencuti }}"><i class="fa fa-file"></i> Unduh File Cuti</a>@endif</td>
                     </tr>
                 </table>
             </div>

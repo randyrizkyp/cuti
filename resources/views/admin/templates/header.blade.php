@@ -21,6 +21,7 @@
     <script src="/package/dist/sweetalert2.min.js"></script>
     <link rel="stylesheet" href="/package/dist/sweetalert2.min.css">
     @yield('css')
+    @livewireStyles
 </head>
 
 <body class="app sidebar-mini ltr light-mode">

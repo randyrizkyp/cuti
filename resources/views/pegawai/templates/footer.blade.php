@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row text-center">
             <div class="col-md-12 col-sm-12">
-                © Copyright 2023. <a href="https://bkpsdm.lampungutarakab.go.id">SILAGU BKPSDM Kab. Lampung Utara.</a> All rights reserved.
+                © Copyright 2024. <a href="https://bkpsdm.lampungutarakab.go.id">e-Cuti BKPSDM Kab. Lampung Utara.</a> All rights reserved.
             </div>
         </div>
     </div>

@@ -12,8 +12,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use GuzzleHttp\Client;
 use PhpOffice\PhpWord\TemplateProcessor;
-
-
+use PDF;
+use Yajra\DataTables\Facades\DataTables;
 
 class AdminController extends Controller
 {
@@ -45,6 +45,14 @@ class AdminController extends Controller
       return view('admin.pengajuancuti.listcuti', $data);
    }
 
+   public function datacuti(Request $request)
+   {
+      if (request()->ajax()) {
+            $data = Cuti::select(['nip', 'tahun', 'jeniscuti', 'pejabatnip']);
+            return DataTables::of($data)->make(true);
+        }
+   }
+
    public function detailcuti($id)
    {
       $cuti = Cuti::join('users', 'cutis.nip', '=', 'users.nip')->join('pybs', 'cutis.pejabatnip', '=', 'pybs.id')->where('cutis.id_cuti', $id)->first();
@@ -64,13 +72,16 @@ class AdminController extends Controller
    }
 
    function validasicuti(Request $request)
-   {
+   {      
       $id_cuti   = $request->post('id_cuti');
       $validasi   = $request->post('validasi');
       $keterangan = $request->post('keterangan'); 
       if($validasi == 'terima'){
 
          if($request->dokumencuti){
+            $cuti = Cuti::where('id_cuti', $id_cuti)->first();
+            $tgl_awal = Carbon::createFromFormat('d/m/Y',$cuti->tglmulai);
+            $tgl_akhir = Carbon::createFromFormat('d/m/Y',$cuti->tglselesai);
             $client = new Client();
             $tahun = Carbon::now()->format('Y');
             $dokumencuti = Str::random(30).'.'.$request->dokumencuti->extension();         
@@ -82,6 +93,7 @@ class AdminController extends Controller
                   'verify' => false,
             ]);
             $pegawai = json_decode($res_pegawai->getBody());
+
             $get_url = "http://10.90.150.3:5001/api/tbpd/". $pegawai[0]->kode_pd;
             $res_url = $client->request('GET', $get_url, [
                   'verify' => false,
@@ -90,16 +102,25 @@ class AdminController extends Controller
             $data = [                
                'dokumencuti' => $fileCuti,
                'status'      => 'disetujui',
-               'no_surat'    => $request->no_surat,
             ];
             $absen = [                
                'nip'       => $request->nip,
-               'foto'   => env('APP_URL').$fileCuti,
-               'jenis'   => 'cuti',
+               'foto'      => env('APP_URL').$fileCuti,
+               'jenis'     => 'cuti',
+               'kd_pd'     => $pegawai[0]->kode_pd,
+               'nama'      => $pegawai[0]->nama,
+               'pangkat'   => $pegawai[0]->pangkat,
+               'jabatan'   => $pegawai[0]->jabatan,
+               'jenis_jbt' => $pegawai[0]->jenis_jbt,
+               'tpp'       => $pegawai[0]->tpp,
+               'tmt_absen' => $pegawai[0]->tmt_absen,
+               'norut'     => $pegawai[0]->norut,
+               'jmlhari'     => $cuti->jmlhari,
+               'jenis_cuti'    => $cuti->jeniscuti,
+               'tgl_awal'    => $tgl_awal,
+               'tgl_akhir'    => $tgl_akhir,
             ];
-            $cuti = Cuti::where('id_cuti', $id_cuti)->first();
-            $tgl_awal = Carbon::createFromFormat('d/m/Y',$cuti->tglmulai);
-            $tgl_akhir = Carbon::createFromFormat('d/m/Y',$cuti->tglselesai);
+           
             $get_libur = "http://10.90.150.3:5001/api/libur";
             $res_libur = $client->request('GET', $get_libur, [
                   'verify' => false,
@@ -113,7 +134,6 @@ class AdminController extends Controller
             ]);
             $dataLiburpus = json_decode($res_liburpus->getBody());
             $daftarTanggalLiburpus = [];
-
 
             // Iterasi data untuk mengonversi format
             foreach ($dataLibur[0] as $libur) {
@@ -154,14 +174,14 @@ class AdminController extends Controller
                         continue;
                      }
                      $absen['tanggal'] = $tgl_awal->day;                  
-                     $absen['bulan'] = $tgl_awal->month;                  
+                     $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                  
                      $absen['tahun'] = $tgl_awal->year;
                      $absen['tgl_awal'] = $tgl_awal;
                      $absen['tgl_akhir'] = $tgl_akhir;
                      $response = Http::post($url[0]->url . '/api/cuti/puskesmas', $absen);
                   }else{
                      $absen['tanggal'] = $tgl_awal->day;                  
-                     $absen['bulan'] = $tgl_awal->month;                  
+                     $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                   
                      $absen['tahun'] = $tgl_awal->year;  
                      $absen['tgl_awal'] = $tgl_awal;
                      $absen['tgl_akhir'] = $tgl_akhir;   
@@ -174,14 +194,14 @@ class AdminController extends Controller
                      continue;
                   }
                   $absen['tanggal'] = $tgl_awal->day;                  
-                  $absen['bulan'] = $tgl_awal->month;                  
-                  $absen['tahun'] = $tgl_awal->year;     
-                  Http::post($url[0]->url . '/api/cuti', $absen);
+                  $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                   
+                  $absen['tahun'] = $tgl_awal->year;  
+                  Http::post('http://10.90.150.3:5001/api/cuti/post', $absen);
                }else if ($pegawai[0]->kode_pd != 'pd_33'){
                   $absen['tanggal'] = $tgl_awal->day;                  
-                  $absen['bulan'] = $tgl_awal->month;                  
+                  $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                 
                   $absen['tahun'] = $tgl_awal->year;     
-                  Http::post($url[0]->url . '/api/cuti', $absen);
+                  Http::post('http://10.90.150.3:5001/api/cuti/post', $absen);
                }
                $tgl_awal->addDay();
             }
@@ -225,14 +245,15 @@ class AdminController extends Controller
 
    public function riwayatcuti()
    {      
-
-      $riwayat = Cuti::join('users', 'cutis.nip', '=', 'users.nip')->whereNotIn('cutis.status', ['draft', 'pengajuan'])->get();
+      $tahun = Carbon::now()->year;
+      $riwayat = Cuti::where('status', 'disetujui')->where('tahun', $tahun)->get();
       $pyb = Pyb::all();
       $data = [
          'title' => 'Riwayat Pengajuan Cuti',
          'riwayat' => $riwayat,         
          'pyb' => $pyb         
       ];
+      // return $riwayat;
       return view('admin.riwayatcuti.listriwayat', $data);
    }
 
@@ -246,6 +267,8 @@ class AdminController extends Controller
       ];
       return view('admin.riwayatcuti.riwayat', $data);
    }
+
+   
 
    public function prosescuti(Request $request)
    {
@@ -261,10 +284,16 @@ class AdminController extends Controller
          $data = [
             'status' => 'penandatanganan',
             'catatan' => NULL,
+            'no_surat'    => $request->no_surat,
          ];
          $cuti->update($data);
       }
+      return back()->with('success','Data Berhasil disimpan');
+   }
 
+   public function downloadpdf($id)
+   {      
+      $cuti = Cuti::where('id_cuti', $id);
       if($cuti->pluck('jeniscuti')->first() == '1'){
          $jenis_cuti = 'Cuti Tahunan';
       }elseif ($cuti->pluck('jeniscuti')->first() == '2'){
@@ -290,12 +319,19 @@ class AdminController extends Controller
 
       Carbon::setLocale('id');
       if($cuti->pluck('jabatan')->first() == '4'){
-         $templatePath = storage_path('app/templates/cuti.docx');
+         $templatePath = storage_path('app/templates/cutitte.docx');
       }elseif ($cuti->pluck('jabatan')->first() == '2' || $cuti->pluck('jabatan')->first() == '3'){
-         $templatePath = storage_path('app/templates/cutisekda.docx');
-      }else{
-         $templatePath = storage_path('app/templates/cutigaruda.docx');
+         $templatePath = storage_path('app/templates/cutisekdatte.docx');
+      }elseif ($cuti->pluck('jabatan')->first() == '1'){
+         $templatePath = storage_path('app/templates/cutigarudatte.docx');
       }
+
+      if ($cuti->pluck('jeniscuti')->first() == '1'){
+         $kalender = 'Kerja';
+      }else{
+         $kalender = 'Kelender';
+      }
+
       $templateProcessor = new TemplateProcessor($templatePath);
       $templateProcessor->setValue('jenis_cuti', $jenis_cuti);
       $templateProcessor->setValue('tahun', $cuti->pluck('tahun')->first());
@@ -309,16 +345,39 @@ class AdminController extends Controller
       $templateProcessor->setValue('tglselesai', Carbon::createFromFormat('d/m/Y', $cuti->pluck('tglselesai')->first())->translatedFormat('d F Y'));
       $templateProcessor->setValue('alamatcuti', $cuti->pluck('alamatcuti')->first());
       $templateProcessor->setValue('tgl', Carbon::now()->translatedFormat('d F Y'));
+      $templateProcessor->setValue('kal', $kalender);
+      $templateProcessor->setValue('no_surat', $cuti->pluck('no_surat')->first());
 
+    //   $fileName = 'dokumencuti_' . $cuti->pluck('nip') . '.docx';
+    //   $filePath = storage_path($fileName);
 
-      $fileName = 'dokumencuti_' . $cuti->pluck('nip') . '.docx';
-      $filePath = storage_path($fileName);
+    //     // Simpan file yang dihasilkan
+    //   $templateProcessor->saveAs($filePath);
+    //   return response()->download($filePath)->deleteFileAfterSend(true);
+      $docxFileName = 'dokumencuti_' . $cuti->pluck('nip')->first() .time() . '.docx';
+      $docxPath = storage_path($docxFileName);
+      $templateProcessor->saveAs($docxPath);
 
-        // Simpan file yang dihasilkan
-      $templateProcessor->saveAs($filePath);
-      return response()->download($filePath)->deleteFileAfterSend(true);
+      // Path untuk menyimpan PDF
+      $pdfFileName = str_replace('.docx', '.pdf', $docxFileName);
+      $pdfPath = storage_path($pdfFileName);
 
-      return back()->with('success','Data Berhasil disimpan');
+      // Jalankan perintah LibreOffice
+      $command = "libreoffice --headless --convert-to pdf {$docxPath} --outdir " . storage_path();
+      exec($command, $output, $resultCode);
+
+      // Cek apakah konversi berhasil
+      if ($resultCode === 0 && file_exists($pdfPath)) {
+         // Hapus file sementara .docx
+         unlink($docxPath);
+
+         // Kirim file PDF untuk diunduh
+         return response()->download($pdfPath)->deleteFileAfterSend(true);
+      } else {
+         // Tangani error jika konversi gagal
+         unlink($docxPath);
+         return response()->json(['error' => 'Konversi ke PDF gagal'], 500);
+      }
    }
 
 }

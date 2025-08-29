@@ -38,8 +38,8 @@
 							class="side-menu__label">Import Data Cuti</span></a>
 				</li>							
 				<li class="slide">
-					<a class="side-menu__item has-link" data-bs-toggle="slide" href="#"><i
-						class="side-menu__icon fe fe-help-circle"></i><span class="side-menu__label">Bantuan</span></a>
+					<a class="side-menu__item has-link" data-bs-toggle="slide" href="/rekapcuti"><i
+						class="side-menu__icon fe fe-file-text"></i><span class="side-menu__label">Rekap Cuti ASN</span></a>
 				</li>
 												
 			</ul>

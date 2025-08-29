@@ -29,14 +29,16 @@ class BerandaController extends Controller
         ]);
         $data = json_decode($response->getBody());
         $uker = collect($data)->first();
-        $cuti = Cuti::where('nip', session('nip'))->get();;
+        $cuti = Cuti::where('nip', session('nip'))->get();
+        // return $cuti;
         $t_pengajuan = $cuti->where('status' , 'pengajuan')->where('tahun', Carbon::now()->year)->count();
         $t_setujui = $cuti->where('status' , 'disetujui')->where('tahun', Carbon::now()->year)->count();
-        $t_ditolak = $cuti->where('status' , 'ditolak')->where('tahun', Carbon::now()->year)->count();
+        $t_ditolak = $cuti->whereIn('status' , ['ditolak', 'tms'])->where('tahun', Carbon::now()->year)->count();
         $nip = session('nip');
         $tahun_s = Carbon::now()->year;
         $tahun_c = Cuti::where([
             'nip' => $nip,
+            'jeniscuti' => 1,
             'status' => 'disetujui'
         ])->get(['tglmulai', 'jmlhari']);  
         $jml_hari = 0;

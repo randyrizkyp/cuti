@@ -56,13 +56,6 @@
                                        <th width="2%">:</th>
                                        <td width="68%">{{ $cuti->unor }}</td>
                                     </tr>
-                                 </table>
-
-                              </div>
-
-                              <div class="col-md-6">       
-
-                                 <table width="100%">
                                     <tr>
                                        <th width="30%">Jenis Cuti</th>
                                        <th width="2%">:</th>
@@ -81,7 +74,14 @@
                                           Cuti di luar Tanggungan Negara
                                           @endif
                                        </td>
-                                    </tr>                                                                  
+                                    </tr>
+                                 </table>
+
+                              </div>
+
+                              <div class="col-md-6">       
+
+                                 <table width="100%">                                                              
                                     <tr>
                                        <th width="30%">Jumlah Hari</th>
                                        <th width="2%">:</th>
@@ -110,13 +110,23 @@
                                     <tr>
                                        <th width="30%">Dokumen Cuti</th>
                                        <th width="2%">:</th>
-                                       <td width="68%">@if($cuti->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumen }}"><i class="fa fa-file"></i> Lihat File</a>@endif</td>
+                                       <td width="68%">@if($cuti->dokumencuti)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumencuti }}"><i class="fa fa-file"></i> Lihat Dokumen</a>@endif</td>
+                                    </tr>
+                                    <tr>
+                                       <th width="30%">Persetujuan Atasan</th>
+                                       <th width="2%">:</th>
+                                       <td width="68%">@if($cuti->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumen }}"><i class="fa fa-file"></i> Lihat Dokumen</a>@endif</td>
+                                    </tr>
+                                    <tr>
+                                       <th width="30%">Dokumen Pendukung Cuti</th>
+                                       <th width="2%">:</th>
+                                       <td width="68%">@if($cuti->dokumenpendukung)<a class="btn btn-success btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumenpendukung }}"><i class="fa fa-file"></i> Lihat Dokumen</a>@endif</td>
                                     </tr>
                                  </table>                                                                                                
 
                               </div>
 
-                              <div class="col-md-12">
+                              <div class="col-md-12 mt-5">
                                  <label>Status : {{ $cuti->status }}</label>
                                  <input type="text" class="form-control" value="catatan : {{ $cuti->catatan }}" readonly>
                               </div>

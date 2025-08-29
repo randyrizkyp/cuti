@@ -9,7 +9,7 @@ $(function() {
             labels: ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"],
             datasets: [{
                 label: 'Profits',
-                data: [100, 420, 210, 420, 210, 320, 350],
+                data: [300, 420, 210, 420, 210, 320, 350],
                 borderWidth: 2,
                 backgroundColor: 'transparent',
                 borderColor: '#6c5ffc',

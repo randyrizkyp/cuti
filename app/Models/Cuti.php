@@ -8,8 +8,8 @@ class Cuti extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'nip', 'tahun','tanggal', 'jeniscuti', 'jmlhari', 'tglmulai', 'tglselesai', 'alasancuti', 'alamatcuti', 'telepon','masa_kerja','jabatan',
-        'atasannip', 'namaatasan','validasiatasan','pejabatnip','dokumen','dokumencuti','status', 'catatan', 'no_surat'
+        'nip', 'nama', 'tahun','tanggal', 'jeniscuti', 'jmlhari', 'tglmulai', 'tglselesai', 'alasancuti', 'alamatcuti', 'telepon','masa_kerja','jabatan',
+        'atasannip', 'namaatasan','validasiatasan', 'nipkepala', 'namakepala', 'pejabatnip','dokumen', 'dokumenpendukung', 'dokumencuti','status', 'catatan', 'no_surat'
     ];
 
 }

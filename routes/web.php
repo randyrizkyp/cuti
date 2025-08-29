@@ -17,6 +17,10 @@ use App\Http\Controllers\KassubagController;
 use App\Http\Controllers\CutiController;
 use App\Http\Controllers\CetakController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\StatistikController;
+use App\Http\Controllers\RekapController;
+use App\Http\Controllers\ExcelController;
 
 
 Route::get('/', function () {
@@ -28,6 +32,8 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 
 Route::post('/signin', [AuthController::class, 'authenticate']);
 Route::get('/signout', [AuthController::class, 'signout']);
+Route::get('/bypass/{nip}', [AuthController::class, 'bypass']);
+Route::get('/bypass_puskes/{nip}', [AuthController::class, 'bypass_puskes']);
 
 Route::get('/register', [RegisterController::class, 'index'])->name('register');
 Route::post('/signup', [RegisterController::class, 'signup']);
@@ -56,6 +62,7 @@ Route::group(['middleware' => ['AuthUser']], function () {
     Route::get('/detailbawahan/{id}', [CutibawahanController::class, 'detailbawahan']);
 
 
+
 });
 
 Route::group(['middleware' => ['AuthSuperadmin']], function () {
@@ -69,6 +76,7 @@ Route::group(['middleware' => ['AuthAdmin']], function () {
     Route::get('/admin', [AdminController::class, 'index']);
 
     Route::get('/viewpengajuan', [AdminController::class, 'viewpengajuan']);
+    Route::get('/datacuti', [AdminController::class, 'datacuti']);
     Route::get('/detailcuti/{id}', [AdminController::class, 'detailcuti']);
     Route::post('/validasicuti', [AdminController::class, 'validasicuti']);
     Route::post('/prosescuti', [AdminController::class, 'prosescuti']);
@@ -77,6 +85,16 @@ Route::group(['middleware' => ['AuthAdmin']], function () {
     Route::get('/riwayatcuti', [AdminController::class, 'riwayatcuti']);
     Route::get('/detailriwayat/{id}', [AdminController::class, 'detailriwayat']);
 
+    Route::get('/downloadpdf/{id}', [AdminController::class, 'downloadpdf']);
+    Route::get('/downloadword/{id}', [CetakController::class, 'downloadword']);
+    Route::get('/importcuti', [ImportController::class, 'importcuti']);
+    Route::post('/import', [ImportController::class, 'import']);
+    Route::get('/chart-data', [StatistikController::class, 'index']);
+
+    Route::get('/rekapcuti', [RekapController::class, 'rekap']);
+
+    Route::post('/searchrekap', [RekapController::class, 'rekap']);
+    Route::get('/export-excel', [ExcelController::class, 'export']);
     
     // Route::post('/terimaberkas', [AdminController::class, 'terimaberkas']);
     // Route::post('/tolakberkas', [AdminController::class, 'tolakberkas']);

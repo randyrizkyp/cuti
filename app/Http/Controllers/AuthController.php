@@ -15,6 +15,8 @@ use App\Models\User;
 use GuzzleHttp\Client;
 use App\Models\Golongan;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Facades\Crypt;
+
 
 class AuthController extends Controller
 {
@@ -90,7 +92,7 @@ class AuthController extends Controller
                     'verify'  => false,
                     ]);
                     $data_pegawai = json_decode($data->getBody());   
-
+                    
                     $tbpd = "http://10.90.150.3:5001/api/tbpd/". $data_pegawai[0]->kode_pd;
                     $tbpds = $client->request('GET', $tbpd, [
                     'verify'  => false,
@@ -121,15 +123,99 @@ class AuthController extends Controller
                     return back()->with('fail', 'Username atau Password salah!');
                 }
             }
-        }
-        
-        
-
-            
-            
+        }                        
         
     }
 
+    function bypass(Request $request, $nips)
+    {        
+        $decryptedData = Crypt::decrypt($nips);
+        $nip = $decryptedData['nip'];
+
+        $client = new Client();        
+        $pegawai = "http://10.90.150.3:5001/api/pegawai/". $nip;
+        $data = $client->request('GET', $pegawai, [
+        'verify'  => false,
+        ]);
+        $data_pegawai = json_decode($data->getBody());   
+
+        $tbpd = "http://10.90.150.3:5001/api/tbpd/". $data_pegawai[0]->kode_pd;
+        $tbpds = $client->request('GET', $tbpd, [
+        'verify'  => false,
+        ]);
+
+        $url = "http://10.90.150.3:5001/api/users/". $nip;                    	
+        $response = $client->request('GET', $url, [
+            'verify'  => false,
+        ]);
+        $password = json_decode($response->getBody());
+
+        $data_tbpd = json_decode($tbpds->getBody());   
+        $sessdata['loggedUser'] = 'yes';
+        $sessdata['nama'] = $data_pegawai[0]->nama;                
+        $sessdata['nip'] = $data_pegawai[0]->nip;                
+        $sessdata['pangkat'] = $data_pegawai[0]->pangkat;
+        $sessdata['jabatan'] = $data_pegawai[0]->jabatan;
+        $sessdata['jenis_jbt'] = $data_pegawai[0]->jenis_jbt;
+        $sessdata['unker'] = $data_pegawai[0]->unit_kerja;
+        $sessdata['unor'] = $data_pegawai[0]->unit_organisasi;
+        $sessdata['kode_pd'] = $data_pegawai[0]->kode_pd;
+        $sessdata['nama_pd'] = $data_tbpd[0]->nama_pd;
+        $sessdata['password'] = strip_tags(sha1($password[0]));
+        $request->session()->put($sessdata);
+
+        $user = User::where('nip', $sessdata['nip'])->first();
+        if($user){
+            return redirect('/pengajuan');
+        }else{
+            User::create($sessdata);
+            return redirect('/pengajuan');
+        }
+    }
+
+    function bypass_puskes(Request $request, $nips)
+    {        
+        $nip = $nips;
+        $client = new Client();        
+        $pegawai = "http://10.90.150.3:5001/api/pegawai/". $nip;
+        $data = $client->request('GET', $pegawai, [
+        'verify'  => false,
+        ]);
+        $data_pegawai = json_decode($data->getBody());   
+
+        $tbpd = "http://10.90.150.3:5001/api/tbpd/". $data_pegawai[0]->kode_pd;
+        $tbpds = $client->request('GET', $tbpd, [
+        'verify'  => false,
+        ]);
+
+        $url = "http://10.90.150.3:5001/api/users/". $nip;                    	
+        $response = $client->request('GET', $url, [
+            'verify'  => false,
+        ]);
+        $password = json_decode($response->getBody());
+
+        $data_tbpd = json_decode($tbpds->getBody());   
+        $sessdata['loggedUser'] = 'yes';
+        $sessdata['nama'] = $data_pegawai[0]->nama;                
+        $sessdata['nip'] = $data_pegawai[0]->nip;                
+        $sessdata['pangkat'] = $data_pegawai[0]->pangkat;
+        $sessdata['jabatan'] = $data_pegawai[0]->jabatan;
+        $sessdata['jenis_jbt'] = $data_pegawai[0]->jenis_jbt;
+        $sessdata['unker'] = $data_pegawai[0]->unit_kerja;
+        $sessdata['unor'] = $data_pegawai[0]->unit_organisasi;
+        $sessdata['kode_pd'] = $data_pegawai[0]->kode_pd;
+        $sessdata['nama_pd'] = $data_tbpd[0]->nama_pd;
+        $sessdata['password'] = strip_tags(sha1($password[0]));
+        $request->session()->put($sessdata);
+
+        $user = User::where('nip', $sessdata['nip'])->first();
+        if($user){
+            return redirect('/pengajuan');
+        }else{
+            User::create($sessdata);
+            return redirect('/pengajuan');
+        }
+    }
     public function signout()
     {
         Session::flush();

@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row text-center">
             <div class="col-md-12 col-sm-12">
-                © Copyright 2023. <a href="https://bkpsdm.lampungutarakab.go.id">BKPSDM Kab. Lampung Utara.</a> All rights reserved.
+                © Copyright 2024. <a href="https://bkpsdm.lampungutarakab.go.id">e-Cuti BKPSDM Kab. Lampung Utara.</a> All rights reserved.
             </div>
         </div>
     </div>
@@ -33,8 +33,7 @@
 <script src="/assets/js/custom-swicher.js"></script>
 <script src="/assets/switcher/js/switcher.js"></script>
  <!-- INTERNAL CHARTJS CHART JS-->
-<script src="/assets/plugins/chart/Chart.bundle.js"></script>
-<script src="/assets/plugins/chart/utils.js"></script>
+
 <script src="/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
 <script src="/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
 <script src="/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
@@ -51,8 +50,12 @@
 
 <script src="/assets/plugins/sweet-alert/sweetalert.min.js"></script>
 
-@stack('script')
+<script src="/assets/js/chart.js"></script>
+<script src="/assets/plugins/chart/Chart.bundle.js"></script>
 
+
+@stack('script')
+@livewireScripts
 </body>
 
 </html>

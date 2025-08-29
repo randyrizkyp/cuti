@@ -16,6 +16,7 @@
                                        <tr>
                                           <td width="10px">No</td>                                          
                                           <td>Cuti</td>
+                                          <td>Tahun</td>
                                           <td>File</td>
                                           <td>Status</td>
                                           <td>Atasan Langsung</td>
@@ -24,50 +25,34 @@
                                        </tr>
                                  </thead>
                                  <tbody>
+                                       
                                        @foreach($riwayat as $dt)
                                        <tr>
                                           <td>{{ $loop->iteration }}</td>                                                                                   
                                           <td>
                                              @if ($dt->jeniscuti == 1)
                                              Cuti Tahunan <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>
-                                             <br>
-                                             {{ $dt->nama }}
-                                             <br>
-                                             {{ $dt->nip }}
                                              @elseif($dt->jeniscuti == 2)
-                                             Cuti Besar <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>
-                                             <br>
-                                             {{ $dt->nama }}
-                                             <br>
-                                             {{ $dt->nip }}
+                                             Cuti Besar <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>                           
                                              @elseif($dt->jeniscuti == 3)
                                              Cuti Sakit <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>
-                                             <br>
-                                             {{ $dt->nama }}
-                                             <br>
-                                             {{ $dt->nip }}
                                              @elseif($dt->jeniscuti == 4)
                                              Cuti Melahirkan <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>
-                                             <br>
-                                             {{ $dt->nama }}
-                                             <br>
-                                             {{ $dt->nip }}
                                              @elseif($dt->jeniscuti == 5)
                                              Cuti Karena Alasan Penting <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>
-                                             <br>
-                                             {{ $dt->nama }}
-                                             <br>
-                                             {{ $dt->nip }}
                                              @elseif($dt->jeniscuti == 6)
                                              Cuti di luar Tanggungan Negara <span class="badge bg-info">{{ $dt->jmlhari }} Hari</span>
+                                             @endif
                                              <br>
                                              {{ $dt->nama }}
                                              <br>
                                              {{ $dt->nip }}
-                                             @endif
+                                             <br>
+                                              {{ $dt->tglmulai }} s.d {{$dt->tglselesai}}
                                           </td>
-                                          <td>@if($dt->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $dt->dokumen }}"><i class="fa fa-file"></i> Lihat File</a>@endif</td>
-                                          <td>
+                                          <td class="text-center">{{$dt->tahun}}</td>
+                                          <td>@if($dt->dokumencuti)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $dt->dokumencuti }}"><i class="fa fa-file"></i> Lihat File</a>@endif</td>
+                                          <td class="text-center">
                                              @if($dt->status == 'disetujui')                                       
                                                 <span class="badge bg-success-transparent rounded-pill text-success p-2 px-3">{{ $dt->status }}</span><br>                                                
                                              @elseif($dt->status == 'perubahan')
@@ -80,6 +65,7 @@
                                                 <span class="badge bg-danger-transparent rounded-pill text-danger p-2 px-3">{{ $dt->status }}</span><br>                                                
                                                 <span style="font-size: 12px;">Catatan : {{ $dt->catatan }}</span>
                                              @endif
+                                            
                                           </td>
                                           <td>{{$dt->namaatasan}}</td>
                                           <td>
@@ -149,6 +135,7 @@
 
                                        @endforeach
                                  </tbody>
+                                 
                               </table>                                                              
                            </div>
                      </div>
@@ -174,6 +161,8 @@ $(document).ready(function() {
       dropdownParent: $('#addPegawai .modal-content')
    });
 });
+
+
 </script>
 
 @endpush

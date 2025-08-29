@@ -88,34 +88,43 @@
                                     </td>
                                  </tr>                                                                  
                                  <tr>
-                                    <th width="30%">Jumlah Hari</th>
+                                    <th width="40%">Jumlah Hari</th>
                                     <th width="2%">:</th>
-                                    <td width="68%">{{ $cuti->jmlhari }} Hari</td>
+                                    <td width="58%">{{ $cuti->jmlhari }} Hari</td>
                                  </tr>
                                  <tr>
-                                    <th width="30%">Tanggal Mulai</th>
+                                    <th width="40%">Tanggal Mulai</th>
                                     <th width="2%">:</th>
-                                    <td width="68%">{{ $cuti->tglmulai }}</td>
+                                    <td width="58%">{{ $cuti->tglmulai }}</td>
                                  </tr>
                                  <tr>
-                                    <th width="30%">Tanggal Selesai</th>
+                                    <th width="40%">Tanggal Selesai</th>
                                     <th width="2%">:</th>
-                                    <td width="68%">{{ $cuti->tglselesai }}</td>
+                                    <td width="58%">{{ $cuti->tglselesai }}</td>
                                  </tr>
                                  <tr>
-                                    <th width="30%">Alasan Cuti</th>
+                                    <th width="40%">Alasan Cuti</th>
                                     <th width="2%">:</th>
-                                    <td width="68%">{{ $cuti->alasancuti }}</td>
+                                    <td width="58%">{{ $cuti->alasancuti }}</td>
                                  </tr>
                                  <tr>
-                                    <th width="30%">Alamat Cuti</th>
+                                    <th width="40%">Alamat Cuti</th>
                                     <th width="2%">:</th>
-                                    <td width="68%">{{ $cuti->alamatcuti }}</td>
+                                    <td width="58%">{{ $cuti->alamatcuti }}</td>
                                  </tr>
                                  <tr>
-                                    <th width="30%">Dokumen Permohonan</th>
+                                    <th width="40%">Persetujuan Atasan Langsung</th>
                                     <th width="2%">:</th>
-                                    <td width="68%">@if($cuti->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumen }}"><i class="fa fa-file"></i> Lihat File</a>@endif</td>
+                                    <td width="58%">@if($cuti->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumen }}"><i class="fa fa-file"></i> Lihat Dokumen</a>@endif</td>
+                                 </tr>
+                                 <tr>
+                                    <th width="40%">Dokumen Pendukung</th>
+                                    <th width="2%">:</th>
+                                    @if ($cuti->jeniscuti == '1' || $cuti->dokumenpendukung == NULL)
+                                    <td> - </td>
+                                    @else
+                                    <td width="58%"><a class="btn btn-secondary btn-sm" title="Lihat File" target="_blank" href="/{{ $cuti->dokumenpendukung }}"><i class="fa fa-file"></i> Lihat Dokumen</a></td>
+                                    @endif
                                  </tr>
                               </table>                                                                                                
 
@@ -191,6 +200,8 @@
                                        <br>
                                        {{ $dt->nip }}
                                        @endif
+                                       <br>
+                                       {{$dt->tglmulai}} s.d {{$dt->tglselesai}}
                                     </td>
                                     <td>@if($dt->dokumen)<a class="btn btn-primary btn-sm" title="Lihat File" target="_blank" href="/{{ $dt->dokumen }}"><i class="fa fa-file"></i> Lihat File</a>@endif</td>
                                     <td><span class="badge bg-success-transparent rounded-pill text-success p-2 px-3">{{ $dt->status }}</span></td>
@@ -209,11 +220,10 @@
                            </tbody>
                         </table>                                                              
                      </div>
+                     
                   </div>
                </div>
             </div>
-            
-
          </div>
       </div>
    </div>
@@ -273,13 +283,7 @@
             <div class="row mt-4" id="divdokumen">               
                <label for="dokumencuti" class="col-sm-2 col-form-label">Dokumen Cuti</label>
                <div class="col-sm-10">
-                  <input type="file" class="form-control" id="dokumencuti" name="dokumencuti" required oninvalid="this.setCustomValidity('Mohon pilih Dokumen Cuti')" oninput="setCustomValidity('')">
-               </div>               
-            </div>
-            <div class="row mt-4" id="divnosurat">               
-               <label for="dokumencuti" class="col-sm-2 col-form-label">Nomor Surat</label>
-               <div class="col-sm-10">
-                  <input type="text" class="form-control" id="no_surat" name="no_surat" required oninvalid="this.setCustomValidity('Mohon Isi Nomor Surat Cuti')" oninput="setCustomValidity('')">
+                  <input type="file" class="form-control" id="dokumencuti" name="dokumencuti">
                </div>               
             </div>
 
@@ -310,44 +314,60 @@
          <form class="form-horizontal" action="/prosescuti" method="POST" enctype="multipart/form-data">
          @csrf
          <div class="modal-body">                     
-         <div class="col-md-12">
-            <input type="hidden" name="id_cuti" value="{{ $cuti->id_cuti }}">
-            <div class="row col-md-12">
-               <div class="row mb-4">
-                  <label class="col-md-4 form-label">Nama Admin</label>
-                  <div class="col-md-8">
-                     <input type="text" class="form-control" value="{{ Session::get('nama') }}" readonly>
-                  </div>
-               </div>
-               <div class="row mb-5">
-                  <label class="col-md-4 form-label">Status Pengajuan</label>
-                  <div class="col-md-8">
-                     <div class="form-check"> 
-                        <input class="form-check-input" type="radio" name="status" value="diterima" id="Radio-sm"> 
-                        <label class="form-check-label" for="Radio-sm"> Diterima </label>
-                      </div>
-                     <div class="form-check"> 
-                        <input class="form-check-input" type="radio" name="status" value="ditolak" id="Radio-sm"> 
-                        <label class="form-check-label" for="Radio-sm"> Ditolak </label> 
+            <div class="col-md-12">
+               <input type="hidden" name="id_cuti" value="{{ $cuti->id_cuti }}">
+               <div class="row col-md-12">
+                  <div class="row mb-4">
+                     <label class="col-md-4 form-label">Nama Admin</label>
+                     <div class="col-md-8">
+                        <input type="text" class="form-control" value="{{ Session::get('nama') }}" readonly>
                      </div>
                   </div>
-               </div>                                       
-            </div>            
-
-            <div class="form-group">               
-               <textarea class="form-control" id="keterangantolak" name="keterangantolak" placeholder="Silahkan isi Catatan Penolakan Cuti" rows="4"></textarea>
+                  <div class="row mb-5">
+                     <label class="col-md-4 form-label">Status Pengajuan</label>
+                     <div class="col-md-8">
+                        <div class="form-check"> 
+                           <input class="form-check-input" type="radio" name="status" value="diterima" onclick="toggleDiv()" id="Radio-sm" {{($cuti->status == 'diterima' || $cuti->status == 'penandatanganan')  ? 'checked' : ''}}> 
+                           <label class="form-check-label" for="Radio-sm"> Diterima </label>
+                        </div>
+                        <div class="form-check"> 
+                           <input class="form-check-input" type="radio" name="status" value="ditolak" onclick="toggleDiv()" id="Radio-sm" @if($cuti->status=="tms") checked @endif> 
+                           <label class="form-check-label" for="Radio-sm"> Ditolak </label> 
+                        </div>
+                     </div>
+                     <div class="row mt-5" id="divnosurat" style="display: none;">               
+                        <label class="col-md-4 form-label">Nomor Surat</label>
+                        <div class="col-sm-8">
+                           <input type="text" class="form-control" id="no_surat" value="{{$cuti->no_surat}}" name="no_surat" required oninvalid="this.setCustomValidity('Mohon isi Nomor Surat')" oninput="setCustomValidity('')">
+                        </div>                         
+                     </div>
+                  </div>
+                  @if($cuti->no_surat)
+                  <div class="row mb-12">
+                     <label class="col-md-4 form-label">Unduh Surat Cuti</label>
+                     <div class="col-md-4">
+                        <a class="btn btn-danger btn-md" title="Download PDF" href="/downloadpdf/{{ $cuti->id_cuti }}"><i class="fa fa-file-pdf-o"></i> Download PDF / (TTE)</a>
+                     </div>
+                     <div class="col-md-4">
+                        <a class="btn btn-blue btn-md" title="Download Word" href="/downloadword/{{ $cuti->id_cuti }}"><i class="fa fa-file-pdf-o"></i> Download Word</a>
+                     </div>
+                  </div>
+                  @endif
+               </div>
+               <div class="form-group" style="display: none;" id="divkettolak">               
+                  <textarea class="form-control" id="keterangantolak" name="keterangantolak" placeholder="Silahkan isi Catatan Penolakan Cuti" rows="4">{{$cuti->catatan}}</textarea>
+               </div>
             </div>
-         </div>
-
          </div>
          <div class="modal-footer">                  
             <button class="btn ripple btn-default" data-bs-dismiss="modal" type="button">Batal</button>
-            <button type="submit" class="btn btn-success">Simpan</button>            
+            <button type="submit" class="btn btn-success">Simpan</button>
          </div>
       </form>
       </div>
    </div>
 </div>
+
 
 
 @endsection
@@ -370,6 +390,25 @@ function terima() {
    $('#divnosurat').removeAttr("hidden");
 }
 
+function toggleDiv() {
+   // Ambil nilai dari radio button yang dipilih
+   const selectedValue = document.querySelector('input[name="status"]:checked').value;
+
+   // Tampilkan atau sembunyikan div berdasarkan nilai
+   const noSurat = document.getElementById('divnosurat');
+   const attnoSurat = document.getElementById('no_surat');
+   const ketTolak = document.getElementById('divkettolak');
+   if (selectedValue === 'diterima') {
+      noSurat.style.display = '';
+      ketTolak.style.display = 'none';
+      attnoSurat.setAttribute('required', 'required');
+   } else {
+         noSurat.style.display = 'none';
+         ketTolak.style.display = '';
+         attnoSurat.removeAttribute('required', 'required');
+   }
+  
+}
 
 
 </script>
