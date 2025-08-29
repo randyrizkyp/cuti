@@ -499,7 +499,7 @@ if(jeniscuti.value=="1"){
         const nm_pejabat = document.getElementById("nm_pejabat");
         if (jabatan === 1){
             pejabat.value = '1';        
-            nm_pejabat.value = 'Aswarodi';        
+            nm_pejabat.value = 'Hamartoni Ahadis';        
         }else if (jabatan === 2){
             pejabat.value = '2'
             nm_pejabat.value = 'Drs. Lekok M.M'

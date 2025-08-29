@@ -2,6 +2,9 @@
 /public/build
 /public/hot
 /public/storage
+/public/dokumencuti
+/public/dokumenpengajuan
+/public/skpensiun
 /storage/*.key
 /vendor
 .env

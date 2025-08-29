@@ -34,15 +34,26 @@ class PengajuanController extends Controller
         $response = $client->request('GET', $url, [
             'verify'  => false,
         ]);
+        
         $data = json_decode($response->getBody());
-        $ukers = collect($data)->first();                
-        // return $uker;
-        $get_libur = "http://10.90.150.3:5001/api/libur";
-        $res_libur = $client->request('GET', $get_libur, [
+        $ukers = collect($data)->first();   
+        
+        $get_libur_pd = "http://10.90.150.3:5001/api/libur";
+        $res_libur_pd = $client->request('GET', $get_libur_pd, [
             'verify' => false,
         ]);
-        $libur = json_decode($res_libur->getBody());
-        // return $libur;
+        $libur_pd = json_decode($res_libur_pd->getBody());
+
+        $get_libur_puskes = "http://10.90.150.3:5001/api/libur/puskes";
+        $res_libur_puskes = $client->request('GET', $get_libur_puskes, [
+            'verify' => false,
+        ]);
+        $libur_puskes = json_decode($res_libur_puskes->getBody());
+        if($uker == 'pd_33'){
+            $libur = $libur_puskes;
+        }else{
+            $libur = $libur_pd;
+        }
         $nip = session('nip');
         $tahun_s = Carbon::now()->year;
         $tahun_c = Cuti::where([
@@ -75,7 +86,7 @@ class PengajuanController extends Controller
         $pyb = Pyb::all();
         $jabatan = Jabatan::all();
         $atasannip = Cuti::where('nip', session('nip'))->where(['status' => 'draft', 'atasannip' => '1'])->pluck('atasannip')->first();
-        // return $sisa_cuti;
+
         if($draft){
             $tgl_mulai = Carbon::createFromFormat('d/m/Y', $draft->tglmulai)->format('Y-m-d');
             $jenis_cuti = $draft->jeniscuti;
@@ -94,7 +105,8 @@ class PengajuanController extends Controller
                 'libur' => $libur,                
                 'sisa_cuti' => $sisa_cuti,                
                 'pyb' => $pyb,                
-                'jabatan' => $jabatan,                
+                'jabatan' => $jabatan,       
+                'uker' => $uker,         
             ]);
         }else{
             return view('pegawai.pengajuancuti.edit', [
@@ -108,7 +120,8 @@ class PengajuanController extends Controller
                 'sisa_cuti' => $sisa_cuti,    
                 'pyb' => $pyb, 
                 'jabatan' => $jabatan,                
-                'atasannip' => $atasannip,                
+                'atasannip' => $atasannip,    
+                'uker' => $uker,            
             ]);
         }
         
@@ -496,7 +509,6 @@ class PengajuanController extends Controller
                 return redirect('/pengajuan')->with('error','Mohon Lengkapi Persyaratan Pengajuan Cuti');
             }
         }
-        
     }
 
 

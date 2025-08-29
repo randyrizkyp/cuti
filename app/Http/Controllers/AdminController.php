@@ -173,14 +173,14 @@ class AdminController extends Controller
                         $tgl_awal->addDay();
                         continue;
                      }
-                     $absen['tanggal'] = $tgl_awal->day;                  
+                     $absen['tanggal'] = str_pad($tgl_awal->day, 2, '0', STR_PAD_LEFT);                  
                      $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                  
                      $absen['tahun'] = $tgl_awal->year;
                      $absen['tgl_awal'] = $tgl_awal;
                      $absen['tgl_akhir'] = $tgl_akhir;
                      $response = Http::post($url[0]->url . '/api/cuti/puskesmas', $absen);
                   }else{
-                     $absen['tanggal'] = $tgl_awal->day;                  
+                     $absen['tanggal'] = str_pad($tgl_awal->day, 2, '0', STR_PAD_LEFT);                 
                      $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                   
                      $absen['tahun'] = $tgl_awal->year;  
                      $absen['tgl_awal'] = $tgl_awal;
@@ -193,12 +193,12 @@ class AdminController extends Controller
                      $tgl_awal->addDay();
                      continue;
                   }
-                  $absen['tanggal'] = $tgl_awal->day;                  
+                  $absen['tanggal'] = str_pad($tgl_awal->day, 2, '0', STR_PAD_LEFT);                  
                   $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                   
                   $absen['tahun'] = $tgl_awal->year;  
                   Http::post('http://10.90.150.3:5001/api/cuti/post', $absen);
                }else if ($pegawai[0]->kode_pd != 'pd_33'){
-                  $absen['tanggal'] = $tgl_awal->day;                  
+                  $absen['tanggal'] = str_pad($tgl_awal->day, 2, '0', STR_PAD_LEFT);                  
                   $absen['bulan'] = str_pad($tgl_awal->month, 2, '0', STR_PAD_LEFT);                 
                   $absen['tahun'] = $tgl_awal->year;     
                   Http::post('http://10.90.150.3:5001/api/cuti/post', $absen);

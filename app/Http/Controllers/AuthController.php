@@ -175,7 +175,8 @@ class AuthController extends Controller
 
     function bypass_puskes(Request $request, $nips)
     {        
-        $nip = $nips;
+        $decryptedData = Crypt::decrypt($nips);
+        $nip = $decryptedData['nip'];
         $client = new Client();        
         $pegawai = "http://10.90.150.3:5001/api/pegawai/". $nip;
         $data = $client->request('GET', $pegawai, [
