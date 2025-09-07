@@ -26,7 +26,7 @@ Carbon::setLocale('id');
                                                 <div class="d-flex">
                                                     <div class="mt-2">
                                                         <h6 class="">Cuti Yang Disetujui</h6>
-                                                        <h2 class="mb-0 number-font">{{$t_setujui}} Hari</h2>
+                                                        <h2 class="mb-0 number-font">{{$cuti->sum('jmlhari')}} Hari</h2>
                                                     </div>
                                                     <div class="ms-auto">
                                                         <div class="chart-wrapper mt-1">

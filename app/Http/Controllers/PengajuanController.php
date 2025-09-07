@@ -81,7 +81,6 @@ class PengajuanController extends Controller
         $t_jml_hari = 12 - $jml_hari;
         $t_jml_hari_n = 12 - $jml_hari_n;
         $sisa_cuti = $t_jml_hari + $t_jml_hari_n;
-        
         $draft = Cuti::where('nip', session('nip'))->where('status', 'draft')->first();
         $pyb = Pyb::all();
         $jabatan = Jabatan::all();
