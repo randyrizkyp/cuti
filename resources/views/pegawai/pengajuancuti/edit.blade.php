@@ -272,6 +272,7 @@
                                     <input type="hidden" name="id" value="{{$draft->id_cuti}}">
                                     <input type="hidden" name="nip" value="{{$draft->nip}}">
                                     <input type="hidden" name="nama" value="{{Str::upper(Session::get('nama'))}}">
+                                    <a href="/resetpengajuan/{{$draft->id_cuti}}" class="btn btn-lg btn-warning"><i class="fa fa-history me-2"></i>Reset Pengisian</a>
                                     <button class="btn btn-lg btn-primary" type="submit" id="button-addon2" name="submit" value="kirim"><i class="fa fa-arrow-circle-right"></i> Kirim Pengajuan</button>
                                 </div>
                             </div>

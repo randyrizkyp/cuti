@@ -53,6 +53,7 @@ Route::group(['middleware' => ['AuthUser']], function () {
     Route::post('/proseslibur', [PengajuanController::class, 'proseslibur']);
     
     Route::post('/submitcuti', [PengajuanController::class, 'insertcuti']);
+    Route::get('/resetpengajuan/{id}', [PengajuanController::class, 'resetpengajuan']);
     Route::post('/updatecuti', [PengajuanController::class, 'updatecuti']);
     
     Route::get('/cetak', [CetakController::class, 'cetak']);

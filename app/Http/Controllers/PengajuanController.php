@@ -510,6 +510,11 @@ class PengajuanController extends Controller
             }
         }
     }
+    function resetpengajuan($id)
+    {
+        Cuti::where('id_cuti', $id)->delete();
+        return back()->with('success','Reset Pengajuan Berhasil');
+    }
 
 
     public function logout()
